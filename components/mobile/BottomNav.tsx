@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 const tabs = [
   { href: "/home", label: "Главная", icon: HomeIcon },
   { href: "/restaurants", label: "Заведения", icon: PlacesIcon },
-  { href: "/menu", label: "Меню", icon: MenuIcon },
+  { href: "/discounts", label: "Скидки", icon: DiscountIcon },
   { href: "/profile", label: "Профиль", icon: ProfileIcon },
 ];
 
@@ -25,7 +25,10 @@ export function BottomNav() {
         {tabs.map((tab) => {
           const isActive =
             pathname === tab.href ||
-            (tab.href === "/restaurants" && pathname.startsWith("/restaurants"));
+            (tab.href === "/restaurants" &&
+              pathname.startsWith("/restaurants")) ||
+            (tab.href === "/discounts" &&
+              (pathname === "/discounts" || pathname === "/menu"));
           const Icon = tab.icon;
 
           return (
@@ -85,21 +88,20 @@ function PlacesIcon({ active }: { active: boolean }) {
   );
 }
 
-function MenuIcon({ active }: { active: boolean }) {
+function DiscountIcon({ active }: { active: boolean }) {
+  const stroke = active ? "#1C1B1A" : "#9A948E";
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <rect
-        x="4"
-        y="5"
-        width="16"
-        height="14"
-        rx="3"
-        stroke={active ? "#1C1B1A" : "#9A948E"}
-        strokeWidth="1.8"
-      />
       <path
-        d="M8 10h8M8 14h5"
-        stroke={active ? "#1C1B1A" : "#9A948E"}
+        d="M4 9l2-4h12l2 4M4 9h16v11a1 1 0 01-1 1H5a1 1 0 01-1-1V9z"
+        stroke={stroke}
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <circle cx="9" cy="14" r="2.5" stroke={stroke} strokeWidth="1.6" />
+      <path
+        d="M13 12h6M13 16h4"
+        stroke={stroke}
         strokeWidth="1.8"
         strokeLinecap="round"
       />

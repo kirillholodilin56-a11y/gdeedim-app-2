@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { LiveBadge } from "@/components/ui/LiveBadge";
@@ -114,15 +113,12 @@ export default function RestaurantDetailPage() {
           ))}
         </div>
 
-        <div className="mt-5 flex items-center justify-between">
+        <motion.div id="venue-menu" className="mt-5 flex scroll-mt-24 items-center justify-between">
           <h2 className="text-lg font-semibold">Меню</h2>
-          <Link
-            href="/menu"
-            className="text-sm font-medium text-accent"
-          >
-            Всё меню →
-          </Link>
-        </div>
+          <span className="text-sm font-medium text-muted">
+            {venueMenu.length} позиций
+          </span>
+        </motion.div>
 
         <motion.div className="mt-3 space-y-3">
           {previewItems.map((item, i) => (

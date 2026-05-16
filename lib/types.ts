@@ -43,3 +43,27 @@ export interface LiveUpdate {
   time: string;
   type: "menu" | "stop" | "discount";
 }
+
+/** Антисписание — map pin (demo data for Tomsk MVP) */
+export interface DiscountMapPin {
+  id: string;
+  restaurantId: string;
+  restaurantName: string;
+  discountLabel: string;
+  x: number;
+  y: number;
+}
+
+/** Антисписание — pickup offer */
+export interface PickupOffer {
+  id: string;
+  restaurantId: string;
+  restaurantName: string;
+  dishName: string;
+  oldPrice: number;
+  newPrice: number;
+  discountPercent: number;
+  pickupWindow: string;
+  availability: string;
+  mapPinId: string;
+}
