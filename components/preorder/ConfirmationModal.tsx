@@ -2,6 +2,8 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { getLineTotal } from "@/lib/preorder";
+import { PriceLabel } from "@/components/ui/PriceLabel";
+import { formatTableSummary } from "@/lib/table-plans";
 import { usePreorder } from "@/context/PreorderContext";
 
 interface ConfirmationModalProps {
@@ -15,6 +17,7 @@ export function ConfirmationModal({ open }: ConfirmationModalProps) {
     total,
     visitTime,
     peopleCount,
+    selectedTable,
     completePreorder,
   } = usePreorder();
 
@@ -58,6 +61,7 @@ export function ConfirmationModal({ open }: ConfirmationModalProps) {
                 label="Гостей"
                 value={peopleCount ? `${peopleCount} чел.` : "—"}
               />
+              <Row label="Столик" value={formatTableSummary(selectedTable)} />
               <div className="border-t border-sand pt-3">
                 <p className="text-xs font-medium text-muted">Блюда</p>
                 <ul className="mt-2 space-y-2">
@@ -70,18 +74,20 @@ export function ConfirmationModal({ open }: ConfirmationModalProps) {
                         {line.name}
                         {line.quantity > 1 ? ` × ${line.quantity}` : ""}
                       </span>
-                      <span className="shrink-0 font-medium">
-                        {getLineTotal(line)} ₽
-                      </span>
+                      <PriceLabel
+                        amount={getLineTotal(line)}
+                        className="shrink-0 font-medium"
+                      />
                     </li>
                   ))}
                 </ul>
               </div>
               <div className="flex items-center justify-between border-t border-sand pt-3">
                 <span className="text-sm font-medium">Итого</span>
-                <span className="text-lg font-semibold text-accent">
-                  {total.toLocaleString("ru-RU")} ₽
-                </span>
+                <PriceLabel
+                  amount={total}
+                  className="text-lg font-semibold text-accent"
+                />
               </div>
             </div>
 

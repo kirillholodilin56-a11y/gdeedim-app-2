@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { PriceLabel } from "@/components/ui/PriceLabel";
 import type { PickupOffer } from "@/lib/types";
 import { useDiscountReservation } from "@/context/DiscountReservationContext";
 
@@ -14,13 +15,17 @@ export function PickupOfferList({
   offers,
   highlightedOfferId,
 }: PickupOfferListProps) {
-  const { addOffer, isInCart } = useDiscountReservation();
+  const { addOffer, getQuantity, canAddMore, isAtStockLimit } =
+    useDiscountReservation();
 
   return (
     <div className="space-y-3">
       {offers.map((offer, i) => {
         const isHighlighted = highlightedOfferId === offer.id;
-        const inCart = isInCart(offer.id);
+        const quantity = getQuantity(offer.id);
+        const inCart = quantity > 0;
+        const atLimit = isAtStockLimit(offer.id);
+        const canAdd = canAddMore(offer.id);
 
         return (
           <motion.article
@@ -56,26 +61,36 @@ export function PickupOfferList({
                   −{offer.discountPercent}%
                 </span>
                 <p className="mt-2 text-xs text-muted line-through">
-                  {offer.oldPrice} ₽
+                  <PriceLabel amount={offer.oldPrice} />
                 </p>
-                <p className="text-lg font-bold text-charcoal">
-                  {offer.newPrice} ₽
-                </p>
+                <PriceLabel
+                  amount={offer.newPrice}
+                  className="text-lg font-bold text-charcoal"
+                />
               </div>
             </div>
 
             <motion.button
               type="button"
-              whileTap={{ scale: 0.97 }}
+              whileTap={canAdd ? { scale: 0.97 } : undefined}
+              disabled={!canAdd}
               onClick={() => addOffer(offer)}
-              className={`mt-4 w-full rounded-2xl py-3 text-sm font-semibold transition-colors ${
-                inCart
-                  ? "bg-sage/15 text-sage"
-                  : "bg-charcoal text-white"
+              className={`mt-4 w-full rounded-2xl py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                inCart ? "bg-sage/15 text-sage" : "bg-charcoal text-white"
               }`}
             >
-              {inCart ? "Добавлено · +1" : "Забронировать"}
+              {inCart
+                ? canAdd
+                  ? "Добавлено · +1"
+                  : "В корзине"
+                : "Забронировать"}
             </motion.button>
+
+            {atLimit && (
+              <p className="mt-2 text-center text-xs text-muted">
+                Больше нет в наличии
+              </p>
+            )}
           </motion.article>
         );
       })}

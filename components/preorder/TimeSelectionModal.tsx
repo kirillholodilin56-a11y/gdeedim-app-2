@@ -7,6 +7,7 @@ import {
   type PeopleCount,
   type VisitTime,
 } from "@/lib/preorder";
+import { PriceLabel } from "@/components/ui/PriceLabel";
 import { usePreorder } from "@/context/PreorderContext";
 
 interface TimeSelectionModalProps {
@@ -19,12 +20,12 @@ export function TimeSelectionModal({ open }: TimeSelectionModalProps) {
     peopleCount,
     setVisitTime,
     setPeopleCount,
-    confirmPreorder,
+    proceedToTableSelection,
     closeFlow,
     total,
   } = usePreorder();
 
-  const canConfirm = visitTime !== null && peopleCount !== null;
+  const canProceed = visitTime !== null && peopleCount !== null;
 
   return (
     <AnimatePresence>
@@ -37,14 +38,14 @@ export function TimeSelectionModal({ open }: TimeSelectionModalProps) {
             className="fixed inset-0 z-[60] bg-charcoal/40 backdrop-blur-sm"
             onClick={closeFlow}
           />
-          <motion.div
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", stiffness: 360, damping: 34 }}
-            className="fixed bottom-0 left-1/2 z-[70] w-full max-w-[430px] -translate-x-1/2 safe-bottom"
-          >
-            <div className="rounded-t-4xl bg-cream px-5 pb-8 pt-3 shadow-soft">
+          <div className="mobile-fixed-shell bottom-0 z-[70] safe-bottom">
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 360, damping: 34 }}
+            >
+              <div className="rounded-t-4xl bg-cream px-5 pb-8 pt-3 shadow-soft">
               <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-muted/25" />
 
               <h2 className="text-xl font-semibold tracking-tight">
@@ -71,7 +72,7 @@ export function TimeSelectionModal({ open }: TimeSelectionModalProps) {
               <p className="mt-5 text-xs font-medium uppercase tracking-wide text-muted">
                 Гостей
               </p>
-              <motion.div className="mt-2 flex gap-2">
+              <div className="mt-2 flex gap-2">
                 {PEOPLE_COUNT_OPTIONS.map((count) => (
                   <PeopleChip
                     key={count}
@@ -80,26 +81,25 @@ export function TimeSelectionModal({ open }: TimeSelectionModalProps) {
                     onSelect={() => setPeopleCount(count as PeopleCount)}
                   />
                 ))}
-              </motion.div>
+              </div>
 
               <div className="mt-6 flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-card">
                 <span className="text-sm text-muted">Итого</span>
-                <span className="text-lg font-semibold">
-                  {total.toLocaleString("ru-RU")} ₽
-                </span>
+                <PriceLabel amount={total} className="text-lg font-semibold" />
               </div>
 
               <motion.button
                 type="button"
-                whileTap={canConfirm ? { scale: 0.98 } : undefined}
-                disabled={!canConfirm}
-                onClick={confirmPreorder}
+                whileTap={canProceed ? { scale: 0.98 } : undefined}
+                disabled={!canProceed}
+                onClick={proceedToTableSelection}
                 className="mt-4 w-full rounded-2xl bg-accent py-4 text-sm font-semibold text-white shadow-glow disabled:opacity-40"
               >
-                Подтвердить время
+                Выбрать столик
               </motion.button>
             </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>

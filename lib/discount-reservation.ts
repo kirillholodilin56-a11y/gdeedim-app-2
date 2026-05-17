@@ -6,8 +6,33 @@ export interface DiscountReservationLine {
   quantity: number;
 }
 
+/** Parse stock from strings like «осталось 4 порции» */
+export function parseStockLimit(availability: string): number {
+  const match = availability.match(/осталось\s+(\d+)/i);
+  if (!match) return 99;
+  const n = parseInt(match[1], 10);
+  return Number.isFinite(n) && n > 0 ? n : 99;
+}
+
+export function getOfferStockLimit(offer: PickupOffer): number {
+  return parseStockLimit(offer.availability);
+}
+
+export function canIncreaseQuantity(
+  currentQty: number,
+  offer: PickupOffer
+): boolean {
+  return currentQty < getOfferStockLimit(offer);
+}
+
 export function getReservationLineTotal(line: DiscountReservationLine): number {
   return line.offer.newPrice * line.quantity;
+}
+
+export function getReservationLineOldTotal(
+  line: DiscountReservationLine
+): number {
+  return line.offer.oldPrice * line.quantity;
 }
 
 export function getReservationCartTotal(

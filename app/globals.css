@@ -44,6 +44,23 @@
     padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
   }
 
+  /* Fixed UI aligned to the mobile shell (no transform — Framer uses transform) */
+  .mobile-fixed-shell {
+    position: fixed;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    width: calc(100% - 24px);
+    max-width: 430px;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+
+  .mobile-fixed-shell > * {
+    pointer-events: auto;
+  }
+
   .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;

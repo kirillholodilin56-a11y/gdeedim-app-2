@@ -10,6 +10,8 @@ import {
 } from "react";
 import type { PickupOffer } from "@/lib/types";
 import {
+  canIncreaseQuantity,
+  getOfferStockLimit,
   getReservationCartTotal,
   getReservationItemCount,
   type DiscountReservationLine,
@@ -23,13 +25,16 @@ interface DiscountReservationContextValue {
   total: number;
   flowStep: DiscountReservationStep;
   isSheetExpanded: boolean;
-  addOffer: (offer: PickupOffer) => void;
+  addOffer: (offer: PickupOffer) => boolean;
+  addOne: (offerId: string) => boolean;
   removeOne: (offerId: string) => void;
   setSheetExpanded: (expanded: boolean) => void;
   startPickup: () => void;
   completeReservation: () => void;
   closeFlow: () => void;
-  isInCart: (offerId: string) => boolean;
+  getQuantity: (offerId: string) => number;
+  canAddMore: (offerId: string) => boolean;
+  isAtStockLimit: (offerId: string) => boolean;
 }
 
 const DiscountReservationContext =
@@ -46,16 +51,58 @@ export function DiscountReservationProvider({
   const itemCount = useMemo(() => getReservationItemCount(lines), [lines]);
   const total = useMemo(() => getReservationCartTotal(lines), [lines]);
 
-  const addOffer = useCallback((offer: PickupOffer) => {
+  const getQuantity = useCallback(
+    (offerId: string) => lines.find((l) => l.offerId === offerId)?.quantity ?? 0,
+    [lines]
+  );
+
+  const canAddMore = useCallback(
+    (offerId: string) => {
+      const line = lines.find((l) => l.offerId === offerId);
+      if (!line) return true;
+      return canIncreaseQuantity(line.quantity, line.offer);
+    },
+    [lines]
+  );
+
+  const isAtStockLimit = useCallback(
+    (offerId: string) => {
+      const line = lines.find((l) => l.offerId === offerId);
+      if (!line) return false;
+      return !canIncreaseQuantity(line.quantity, line.offer);
+    },
+    [lines]
+  );
+
+  const addOffer = useCallback((offer: PickupOffer): boolean => {
+    let added = false;
     setLines((prev) => {
       const existing = prev.find((l) => l.offerId === offer.id);
       if (existing) {
+        if (!canIncreaseQuantity(existing.quantity, offer)) return prev;
+        added = true;
         return prev.map((l) =>
           l.offerId === offer.id ? { ...l, quantity: l.quantity + 1 } : l
         );
       }
+      if (getOfferStockLimit(offer) < 1) return prev;
+      added = true;
       return [...prev, { offerId: offer.id, offer, quantity: 1 }];
     });
+    return added;
+  }, []);
+
+  const addOne = useCallback((offerId: string): boolean => {
+    let added = false;
+    setLines((prev) => {
+      const line = prev.find((l) => l.offerId === offerId);
+      if (!line || !canIncreaseQuantity(line.quantity, line.offer)) return prev;
+      added = true;
+      return prev.map((l) =>
+        l.offerId === offerId ? { ...l, quantity: l.quantity + 1 } : l
+      );
+    });
+    return added;
   }, []);
 
   const removeOne = useCallback((offerId: string) => {
@@ -89,11 +136,6 @@ export function DiscountReservationProvider({
     setFlowStep("idle");
   }, []);
 
-  const isInCart = useCallback(
-    (offerId: string) => lines.some((l) => l.offerId === offerId),
-    [lines]
-  );
-
   const value = useMemo<DiscountReservationContextValue>(
     () => ({
       lines,
@@ -102,12 +144,15 @@ export function DiscountReservationProvider({
       flowStep,
       isSheetExpanded,
       addOffer,
+      addOne,
       removeOne,
       setSheetExpanded,
       startPickup,
       completeReservation,
       closeFlow,
-      isInCart,
+      getQuantity,
+      canAddMore,
+      isAtStockLimit,
     }),
     [
       lines,
@@ -116,11 +161,14 @@ export function DiscountReservationProvider({
       flowStep,
       isSheetExpanded,
       addOffer,
+      addOne,
       removeOne,
       startPickup,
       completeReservation,
       closeFlow,
-      isInCart,
+      getQuantity,
+      canAddMore,
+      isAtStockLimit,
     ]
   );
 

@@ -1,7 +1,11 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { getReservationLineTotal } from "@/lib/discount-reservation";
+import {
+  getReservationLineOldTotal,
+  getReservationLineTotal,
+} from "@/lib/discount-reservation";
+import { PriceLabel } from "@/components/ui/PriceLabel";
 import { useDiscountReservation } from "@/context/DiscountReservationContext";
 
 export function DiscountReservationConfirm() {
@@ -26,13 +30,14 @@ export function DiscountReservationConfirm() {
             onClick={closeFlow}
           />
 
-          <motion.div
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", stiffness: 360, damping: 34 }}
-            className="relative w-full max-w-[430px] rounded-t-4xl bg-cream px-5 pb-8 pt-3 shadow-soft safe-bottom"
-          >
+          <div className="mobile-fixed-shell bottom-0 safe-bottom">
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 360, damping: 34 }}
+            >
+              <div className="w-full rounded-t-4xl bg-cream px-5 pb-8 pt-3 shadow-soft">
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-muted/25" />
 
             <motion.div
@@ -67,18 +72,29 @@ export function DiscountReservationConfirm() {
                   <p className="mt-0.5 text-base font-semibold">
                     {line.offer.dishName}
                   </p>
+                  <p className="mt-1 text-xs text-muted">
+                    <span className="whitespace-nowrap tabular-nums">
+                      {line.quantity} ×{" "}
+                      <PriceLabel
+                        amount={line.offer.newPrice}
+                        className="inline text-xs font-normal text-muted"
+                      />
+                    </span>
+                  </p>
 
-                  <div className="mt-3 flex items-center justify-between">
+                  <div className="mt-3 flex items-center justify-between gap-3">
                     <span className="inline-block rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-bold text-accent">
                       −{line.offer.discountPercent}%
                     </span>
-                    <div className="text-right">
-                      <p className="text-xs text-muted line-through">
-                        {line.offer.oldPrice} ₽
-                      </p>
-                      <p className="text-lg font-bold text-charcoal">
-                        {getReservationLineTotal(line)} ₽
-                      </p>
+                    <div className="flex items-baseline justify-end gap-2">
+                      <PriceLabel
+                        amount={getReservationLineOldTotal(line)}
+                        className="text-xs text-muted line-through"
+                      />
+                      <PriceLabel
+                        amount={getReservationLineTotal(line)}
+                        className="text-lg font-bold text-charcoal"
+                      />
                     </div>
                   </div>
 
@@ -102,9 +118,10 @@ export function DiscountReservationConfirm() {
 
             <div className="mt-4 flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-card">
               <span className="text-sm text-muted">Итого к оплате в зале</span>
-              <span className="text-lg font-semibold text-accent">
-                {total.toLocaleString("ru-RU")} ₽
-              </span>
+              <PriceLabel
+                amount={total}
+                className="text-lg font-semibold text-accent"
+              />
             </div>
 
             <motion.button
@@ -115,7 +132,9 @@ export function DiscountReservationConfirm() {
             >
               Готово
             </motion.button>
-          </motion.div>
+              </div>
+            </motion.div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

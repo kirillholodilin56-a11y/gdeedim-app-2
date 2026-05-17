@@ -18,8 +18,13 @@ import {
   type PreorderLine,
   type VisitTime,
 } from "@/lib/preorder";
+import {
+  AUTO_ASSIGNED_TABLE,
+  hasTablePlan,
+  type SelectedTable,
+} from "@/lib/table-plans";
 
-export type PreorderFlowStep = "idle" | "time" | "confirm";
+export type PreorderFlowStep = "idle" | "time" | "table" | "confirm";
 
 interface PreorderContextValue {
   restaurantId: string | null;
@@ -27,18 +32,22 @@ interface PreorderContextValue {
   lines: PreorderLine[];
   visitTime: VisitTime | null;
   peopleCount: PeopleCount | null;
+  selectedTable: SelectedTable | null;
   flowStep: PreorderFlowStep;
   itemCount: number;
   total: number;
   isSheetExpanded: boolean;
   addItem: (restaurantId: string, restaurantName: string, item: MenuItem) => void;
+  addOne: (menuItemId: string) => void;
   removeOne: (menuItemId: string) => void;
   clearCart: () => void;
   setSheetExpanded: (expanded: boolean) => void;
   startCheckout: () => void;
   setVisitTime: (time: VisitTime) => void;
   setPeopleCount: (count: PeopleCount) => void;
-  confirmPreorder: () => void;
+  setSelectedTable: (table: SelectedTable | null) => void;
+  proceedToTableSelection: () => void;
+  proceedToConfirm: () => void;
   completePreorder: () => void;
   closeFlow: () => void;
   hasCartForRestaurant: (restaurantId: string) => boolean;
@@ -52,6 +61,7 @@ export function PreorderProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<PreorderLine[]>([]);
   const [visitTime, setVisitTimeState] = useState<VisitTime | null>(null);
   const [peopleCount, setPeopleCountState] = useState<PeopleCount | null>(null);
+  const [selectedTable, setSelectedTable] = useState<SelectedTable | null>(null);
   const [flowStep, setFlowStep] = useState<PreorderFlowStep>("idle");
   const [isSheetExpanded, setSheetExpanded] = useState(false);
   const restaurantIdRef = useRef<string | null>(null);
@@ -87,6 +97,16 @@ export function PreorderProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const addOne = useCallback((menuItemId: string) => {
+    setLines((prev) =>
+      prev.map((l) =>
+        l.menuItemId === menuItemId
+          ? { ...l, quantity: l.quantity + 1 }
+          : l
+      )
+    );
+  }, []);
+
   const removeOne = useCallback((menuItemId: string) => {
     setLines((prev) => {
       const line = prev.find((l) => l.menuItemId === menuItemId);
@@ -94,6 +114,7 @@ export function PreorderProvider({ children }: { children: ReactNode }) {
       if (line.quantity <= 1) {
         const next = prev.filter((l) => l.menuItemId !== menuItemId);
         if (next.length === 0) {
+          restaurantIdRef.current = null;
           setRestaurantId(null);
           setRestaurantName(null);
           setSheetExpanded(false);
@@ -115,12 +136,16 @@ export function PreorderProvider({ children }: { children: ReactNode }) {
     setRestaurantName(null);
     setVisitTimeState(null);
     setPeopleCountState(null);
+    setSelectedTable(null);
     setFlowStep("idle");
     setSheetExpanded(false);
   }, []);
 
   const startCheckout = useCallback(() => {
     if (lines.length === 0) return;
+    setVisitTimeState(null);
+    setPeopleCountState(null);
+    setSelectedTable(null);
     setFlowStep("time");
     setSheetExpanded(false);
   }, [lines.length]);
@@ -133,10 +158,25 @@ export function PreorderProvider({ children }: { children: ReactNode }) {
     setPeopleCountState(count);
   }, []);
 
-  const confirmPreorder = useCallback(() => {
+  const proceedToTableSelection = useCallback(() => {
     if (!visitTime || !peopleCount || lines.length === 0) return;
+    if (restaurantId && !hasTablePlan(restaurantId)) {
+      setSelectedTable(AUTO_ASSIGNED_TABLE);
+    } else {
+      setSelectedTable(null);
+    }
+    setFlowStep("table");
+  }, [visitTime, peopleCount, lines.length, restaurantId]);
+
+  const proceedToConfirm = useCallback(() => {
+    if (!visitTime || !peopleCount || lines.length === 0) return;
+    const needsSelection = restaurantId && hasTablePlan(restaurantId);
+    if (needsSelection && !selectedTable) return;
+    if (!needsSelection && !selectedTable) {
+      setSelectedTable(AUTO_ASSIGNED_TABLE);
+    }
     setFlowStep("confirm");
-  }, [visitTime, peopleCount, lines.length]);
+  }, [visitTime, peopleCount, lines.length, restaurantId, selectedTable]);
 
   const completePreorder = useCallback(() => {
     clearCart();
@@ -146,6 +186,7 @@ export function PreorderProvider({ children }: { children: ReactNode }) {
     setFlowStep("idle");
     setVisitTimeState(null);
     setPeopleCountState(null);
+    setSelectedTable(null);
   }, []);
 
   const hasCartForRestaurant = useCallback(
@@ -160,18 +201,22 @@ export function PreorderProvider({ children }: { children: ReactNode }) {
       lines,
       visitTime,
       peopleCount,
+      selectedTable,
       flowStep,
       itemCount,
       total,
       isSheetExpanded,
       addItem,
+      addOne,
       removeOne,
       clearCart,
       setSheetExpanded,
       startCheckout,
       setVisitTime,
       setPeopleCount,
-      confirmPreorder,
+      setSelectedTable,
+      proceedToTableSelection,
+      proceedToConfirm,
       completePreorder,
       closeFlow,
       hasCartForRestaurant,
@@ -182,17 +227,20 @@ export function PreorderProvider({ children }: { children: ReactNode }) {
       lines,
       visitTime,
       peopleCount,
+      selectedTable,
       flowStep,
       itemCount,
       total,
       isSheetExpanded,
       addItem,
+      addOne,
       removeOne,
       clearCart,
       startCheckout,
       setVisitTime,
       setPeopleCount,
-      confirmPreorder,
+      proceedToTableSelection,
+      proceedToConfirm,
       completePreorder,
       closeFlow,
       hasCartForRestaurant,
