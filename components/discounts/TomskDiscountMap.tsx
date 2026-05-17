@@ -102,7 +102,7 @@ export function TomskDiscountMap({
                     className="absolute -inset-3 rounded-full border-2 border-accent/40"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: [0.4, 0.8, 0.4] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
+                    transition={{ duration: 1.5, repeat: 0 }}
                   />
                 )}
               </motion.div>

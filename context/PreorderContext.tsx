@@ -47,6 +47,7 @@ interface PreorderContextValue {
   setPeopleCount: (count: PeopleCount) => void;
   setSelectedTable: (table: SelectedTable | null) => void;
   proceedToTableSelection: () => void;
+  backToTimeSelection: () => void;
   confirmWithoutTable: () => void;
   proceedToConfirm: () => void;
   completePreorder: () => void;
@@ -165,6 +166,11 @@ export function PreorderProvider({ children }: { children: ReactNode }) {
     setFlowStep("table");
   }, [visitTime, peopleCount, lines.length]);
 
+  const backToTimeSelection = useCallback(() => {
+    setSelectedTable(null);
+    setFlowStep("time");
+  }, []);
+
   const confirmWithoutTable = useCallback(() => {
     if (!visitTime || !peopleCount || lines.length === 0) return;
     setSelectedTable(AUTO_ASSIGNED_TABLE);
@@ -220,6 +226,7 @@ export function PreorderProvider({ children }: { children: ReactNode }) {
       setPeopleCount,
       setSelectedTable,
       proceedToTableSelection,
+      backToTimeSelection,
       confirmWithoutTable,
       proceedToConfirm,
       completePreorder,
@@ -245,6 +252,7 @@ export function PreorderProvider({ children }: { children: ReactNode }) {
       setVisitTime,
       setPeopleCount,
       proceedToTableSelection,
+      backToTimeSelection,
       confirmWithoutTable,
       proceedToConfirm,
       completePreorder,

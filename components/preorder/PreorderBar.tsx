@@ -10,6 +10,12 @@ interface PreorderBarProps {
   restaurantId: string;
 }
 
+function formatDishCount(count: number): string {
+  if (count === 1) return "1 блюдо";
+  if (count < 5) return `${count} блюда`;
+  return `${count} блюд`;
+}
+
 export function PreorderBar({ restaurantId }: PreorderBarProps) {
   const {
     hasCartForRestaurant,
@@ -25,6 +31,14 @@ export function PreorderBar({ restaurantId }: PreorderBarProps) {
 
   const visible = hasCartForRestaurant(restaurantId);
 
+  const openCart = () => setSheetExpanded(true);
+  const closeCart = () => setSheetExpanded(false);
+  const toggleCart = () => setSheetExpanded(!isSheetExpanded);
+
+  const handleCheckout = () => {
+    startCheckout();
+  };
+
   return (
     <AnimatePresence>
       {visible && (
@@ -37,7 +51,7 @@ export function PreorderBar({ restaurantId }: PreorderBarProps) {
               exit={{ opacity: 0 }}
               aria-label="Закрыть корзину"
               className="fixed inset-0 z-40 bg-charcoal/25 backdrop-blur-[2px]"
-              onClick={() => setSheetExpanded(false)}
+              onClick={closeCart}
             />
           )}
 
@@ -58,11 +72,11 @@ export function PreorderBar({ restaurantId }: PreorderBarProps) {
                       transition={{ duration: 0.25 }}
                       className="border-b border-sand/80"
                     >
-                      <div className="max-h-52 overflow-y-auto px-4 pt-4">
-                        <p className="text-xs font-medium text-muted">
-                          Ваш предзаказ
-                        </p>
-                        <ul className="mt-2 space-y-3 pb-3">
+                      <div className="max-h-56 overflow-y-auto px-4 pt-4">
+                        <h3 className="text-sm font-semibold tracking-tight">
+                          Корзина
+                        </h3>
+                        <ul className="mt-3 space-y-3">
                           {lines.map((line) => (
                             <li
                               key={line.menuItemId}
@@ -90,7 +104,9 @@ export function PreorderBar({ restaurantId }: PreorderBarProps) {
                               <div className="flex shrink-0 items-center gap-2">
                                 <QuantityStepper
                                   quantity={line.quantity}
-                                  onDecrease={() => removeOne(line.menuItemId)}
+                                  onDecrease={() =>
+                                    removeOne(line.menuItemId)
+                                  }
                                   onIncrease={() => addOne(line.menuItemId)}
                                 />
                                 <PriceLabel
@@ -101,37 +117,62 @@ export function PreorderBar({ restaurantId }: PreorderBarProps) {
                             </li>
                           ))}
                         </ul>
+
+                        <div className="mt-4 flex items-center justify-between border-t border-sand pt-3 pb-1">
+                          <span className="text-sm font-medium text-muted">
+                            Итого
+                          </span>
+                          <PriceLabel
+                            amount={total}
+                            className="text-lg font-semibold"
+                          />
+                        </div>
+
+                        <motion.button
+                          type="button"
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handleCheckout}
+                          className="mb-3 mt-3 w-full rounded-2xl bg-accent py-3.5 text-sm font-semibold text-white shadow-glow"
+                        >
+                          Оформить предзаказ
+                        </motion.button>
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
-                <div className="flex items-center gap-3 p-4">
+                <div className="flex items-center gap-3 p-3.5">
                   <button
                     type="button"
-                    onClick={() => setSheetExpanded(!isSheetExpanded)}
+                    onClick={toggleCart}
                     className="flex min-w-0 flex-1 flex-col text-left"
+                    aria-expanded={isSheetExpanded}
+                    aria-label={
+                      isSheetExpanded
+                        ? "Свернуть корзину"
+                        : "Открыть корзину"
+                    }
                   >
-                    <span className="text-xs text-muted">
-                      {itemCount}{" "}
-                      {itemCount === 1
-                        ? "блюдо"
-                        : itemCount < 5
-                          ? "блюда"
-                          : "блюд"}
+                    <span className="text-sm font-semibold text-charcoal">
+                      {formatDishCount(itemCount)}
                     </span>
                     <PriceLabel
                       amount={total}
-                      className="text-lg font-semibold tracking-tight"
+                      className="text-base font-semibold tracking-tight"
                     />
+                    {!isSheetExpanded && (
+                      <span className="mt-0.5 text-[10px] text-muted">
+                        нажмите, чтобы посмотреть
+                      </span>
+                    )}
                   </button>
                   <motion.button
                     type="button"
                     whileTap={{ scale: 0.97 }}
-                    onClick={startCheckout}
-                    className="shrink-0 rounded-2xl bg-charcoal px-5 py-3.5 text-sm font-semibold text-white"
+                    onClick={isSheetExpanded ? closeCart : openCart}
+                    className="shrink-0 rounded-2xl bg-charcoal px-4 py-3 text-sm font-semibold text-white"
                   >
-                    Оформить предзаказ
+                    {isSheetExpanded ? "Свернуть" : "Корзина"}
                   </motion.button>
                 </div>
               </div>

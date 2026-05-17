@@ -7,6 +7,7 @@ import {
   AUTO_ASSIGNED_TABLE,
   formatTableSummary,
   getTablePlan,
+  hasSelectableTablesForParty,
   hasTablePlan,
   isTableSelectable,
   tableToSelection,
@@ -25,18 +26,27 @@ export function TableSelectionModal({ open }: TableSelectionModalProps) {
     selectedTable,
     setSelectedTable,
     proceedToConfirm,
+    backToTimeSelection,
+    confirmWithoutTable,
     closeFlow,
     total,
   } = usePreorder();
 
   const plan = restaurantId ? getTablePlan(restaurantId) : null;
   const showFloorPlan = restaurantId ? hasTablePlan(restaurantId) : false;
+  const noSuitableTables =
+    showFloorPlan &&
+    plan &&
+    peopleCount &&
+    !hasSelectableTablesForParty(plan, peopleCount);
 
-  const canConfirm = showFloorPlan
-    ? selectedTable !== null &&
-      !selectedTable.autoAssigned &&
-      Boolean(selectedTable.tableId)
-    : selectedTable?.autoAssigned === true;
+  const canConfirm =
+    !noSuitableTables &&
+    (showFloorPlan
+      ? selectedTable !== null &&
+        !selectedTable.autoAssigned &&
+        Boolean(selectedTable.tableId)
+      : selectedTable?.autoAssigned === true);
 
   const handleSelectTable = (table: RestaurantTable) => {
     if (!peopleCount || !isTableSelectable(table, peopleCount)) return;
@@ -64,66 +74,81 @@ export function TableSelectionModal({ open }: TableSelectionModalProps) {
               <div className="max-h-[90vh] overflow-y-auto rounded-t-4xl bg-cream px-5 pb-8 pt-3 shadow-soft">
                 <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-muted/25" />
 
-                <h2 className="text-xl font-semibold tracking-tight">
-                  Выберите столик
-                </h2>
-                <p className="mt-1 text-sm text-muted">
-                  Покажем свободные места на выбранное время.
-                </p>
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.98 }}
+                  onClick={backToTimeSelection}
+                  className="mb-3 flex items-center gap-1 text-sm font-medium text-muted"
+                >
+                  <ChevronLeftIcon />
+                  Назад
+                </motion.button>
 
-                {showFloorPlan && plan && peopleCount ? (
+                {noSuitableTables ? (
+                  <NoTablesEmptyState
+                    onChangeTime={backToTimeSelection}
+                    onContinueWithoutTable={confirmWithoutTable}
+                  />
+                ) : (
                   <>
-                    <FloorPlanLegend />
-                    <motion.div
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.08 }}
-                      className="relative mt-4 aspect-[4/3] w-full rounded-2xl bg-white p-3 shadow-card"
-                    >
-                      <div className="absolute inset-3 rounded-xl border border-dashed border-sand/80" />
-                      {plan.tables.map((table, i) => (
-                        <TableNode
-                          key={table.id}
-                          table={table}
-                          peopleCount={peopleCount}
-                          selected={selectedTable?.tableId === table.id}
-                          onSelect={() => handleSelectTable(table)}
-                          index={i}
-                        />
-                      ))}
-                    </motion.div>
-                    {selectedTable && !selectedTable.autoAssigned && (
-                      <p className="mt-3 text-center text-sm font-medium text-charcoal">
-                        {formatTableSummary(selectedTable)}
-                      </p>
+                    <h2 className="text-xl font-semibold tracking-tight">
+                      Выберите столик
+                    </h2>
+                    <p className="mt-1 text-sm text-muted">
+                      Покажем свободные места на выбранное время.
+                    </p>
+
+                    {showFloorPlan && plan && peopleCount ? (
+                      <>
+                        <FloorPlanLegend />
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.08 }}
+                          className="relative mt-4 aspect-[4/3] w-full rounded-2xl bg-white p-3 shadow-card"
+                        >
+                          <div className="absolute inset-3 rounded-xl border border-dashed border-sand/80" />
+                          {plan.tables.map((table, i) => (
+                            <TableNode
+                              key={table.id}
+                              table={table}
+                              peopleCount={peopleCount}
+                              selected={selectedTable?.tableId === table.id}
+                              onSelect={() => handleSelectTable(table)}
+                              index={i}
+                            />
+                          ))}
+                        </motion.div>
+                        {selectedTable && !selectedTable.autoAssigned && (
+                          <p className="mt-3 text-center text-sm font-medium text-charcoal">
+                            {formatTableSummary(selectedTable)}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <div className="mt-5 rounded-2xl bg-white p-5 text-center shadow-card">
+                        <p className="text-sm font-medium text-charcoal">
+                          Столик подберёт администратор
+                        </p>
+                        <p className="mt-2 text-xs text-muted">
+                          В этом заведении выбор столика недоступен — мы
+                          закрепим место при вашем приходе.
+                        </p>
+                        <motion.button
+                          type="button"
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setSelectedTable(AUTO_ASSIGNED_TABLE)}
+                          className={`mt-4 w-full rounded-2xl py-3 text-sm font-semibold ${
+                            selectedTable?.autoAssigned
+                              ? "bg-charcoal text-white"
+                              : "bg-sand text-charcoal"
+                          }`}
+                        >
+                          Понятно
+                        </motion.button>
+                      </div>
                     )}
                   </>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-5 rounded-2xl bg-white p-5 text-center shadow-card"
-                  >
-                    <p className="text-sm font-medium text-charcoal">
-                      Столик подберёт администратор
-                    </p>
-                    <p className="mt-2 text-xs text-muted">
-                      В этом заведении выбор столика недоступен — мы закрепим
-                      место при вашем приходе.
-                    </p>
-                    <motion.button
-                      type="button"
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => setSelectedTable(AUTO_ASSIGNED_TABLE)}
-                      className={`mt-4 w-full rounded-2xl py-3 text-sm font-semibold ${
-                        selectedTable?.autoAssigned
-                          ? "bg-charcoal text-white"
-                          : "bg-sand text-charcoal"
-                      }`}
-                    >
-                      Понятно
-                    </motion.button>
-                  </motion.div>
                 )}
 
                 <div className="mt-5 flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-card">
@@ -131,21 +156,62 @@ export function TableSelectionModal({ open }: TableSelectionModalProps) {
                   <PriceLabel amount={total} className="text-lg font-semibold" />
                 </div>
 
-                <motion.button
-                  type="button"
-                  whileTap={canConfirm ? { scale: 0.98 } : undefined}
-                  disabled={!canConfirm}
-                  onClick={proceedToConfirm}
-                  className="mt-4 w-full rounded-2xl bg-accent py-4 text-sm font-semibold text-white shadow-glow disabled:opacity-40"
-                >
-                  Подтвердить предзаказ
-                </motion.button>
+                {!noSuitableTables && (
+                  <motion.button
+                    type="button"
+                    whileTap={canConfirm ? { scale: 0.98 } : undefined}
+                    disabled={!canConfirm}
+                    onClick={proceedToConfirm}
+                    className="mt-4 w-full rounded-2xl bg-accent py-4 text-sm font-semibold text-white shadow-glow disabled:opacity-40"
+                  >
+                    Подтвердить предзаказ
+                  </motion.button>
+                )}
               </div>
             </motion.div>
           </div>
         </>
       )}
     </AnimatePresence>
+  );
+}
+
+function NoTablesEmptyState({
+  onChangeTime,
+  onContinueWithoutTable,
+}: {
+  onChangeTime: () => void;
+  onContinueWithoutTable: () => void;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mt-1 rounded-2xl bg-white p-5 text-center shadow-card"
+    >
+      <h2 className="text-lg font-semibold tracking-tight">
+        Нет свободных столиков
+      </h2>
+      <p className="mt-2 text-sm leading-relaxed text-muted">
+        Попробуйте выбрать другое время или уменьшить количество гостей.
+      </p>
+      <motion.button
+        type="button"
+        whileTap={{ scale: 0.98 }}
+        onClick={onChangeTime}
+        className="mt-5 w-full rounded-2xl bg-charcoal py-3.5 text-sm font-semibold text-white"
+      >
+        Изменить время
+      </motion.button>
+      <motion.button
+        type="button"
+        whileTap={{ scale: 0.98 }}
+        onClick={onContinueWithoutTable}
+        className="mt-2 w-full rounded-2xl border border-charcoal/10 bg-white py-3.5 text-sm font-semibold text-charcoal"
+      >
+        Продолжить без выбора столика
+      </motion.button>
+    </motion.div>
   );
 }
 
@@ -218,5 +284,19 @@ function TableNode({
       <span className="text-[10px] font-bold leading-none">{table.number}</span>
       <span className="text-[8px] leading-tight opacity-80">{table.seats}</span>
     </motion.button>
+  );
+}
+
+function ChevronLeftIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M15 18l-6-6 6-6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

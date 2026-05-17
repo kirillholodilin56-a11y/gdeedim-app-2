@@ -153,6 +153,13 @@ export function isTableSelectable(
   return table.seats >= minSeatsForPeople(peopleCount);
 }
 
+export function hasSelectableTablesForParty(
+  plan: RestaurantTablePlan,
+  peopleCount: PeopleCount
+): boolean {
+  return plan.tables.some((table) => isTableSelectable(table, peopleCount));
+}
+
 export function tableToSelection(table: RestaurantTable): SelectedTable {
   return {
     tableId: table.id,
