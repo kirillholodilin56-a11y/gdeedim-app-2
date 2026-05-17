@@ -47,6 +47,7 @@ interface PreorderContextValue {
   setPeopleCount: (count: PeopleCount) => void;
   setSelectedTable: (table: SelectedTable | null) => void;
   proceedToTableSelection: () => void;
+  confirmWithoutTable: () => void;
   proceedToConfirm: () => void;
   completePreorder: () => void;
   closeFlow: () => void;
@@ -160,19 +161,22 @@ export function PreorderProvider({ children }: { children: ReactNode }) {
 
   const proceedToTableSelection = useCallback(() => {
     if (!visitTime || !peopleCount || lines.length === 0) return;
-    if (restaurantId && !hasTablePlan(restaurantId)) {
-      setSelectedTable(AUTO_ASSIGNED_TABLE);
-    } else {
-      setSelectedTable(null);
-    }
+    setSelectedTable(null);
     setFlowStep("table");
-  }, [visitTime, peopleCount, lines.length, restaurantId]);
+  }, [visitTime, peopleCount, lines.length]);
+
+  const confirmWithoutTable = useCallback(() => {
+    if (!visitTime || !peopleCount || lines.length === 0) return;
+    setSelectedTable(AUTO_ASSIGNED_TABLE);
+    setFlowStep("confirm");
+  }, [visitTime, peopleCount, lines.length]);
 
   const proceedToConfirm = useCallback(() => {
     if (!visitTime || !peopleCount || lines.length === 0) return;
-    const needsSelection = restaurantId && hasTablePlan(restaurantId);
-    if (needsSelection && !selectedTable) return;
-    if (!needsSelection && !selectedTable) {
+    const onTableStep = restaurantId && hasTablePlan(restaurantId);
+    if (onTableStep) {
+      if (!selectedTable || selectedTable.autoAssigned) return;
+    } else if (!selectedTable) {
       setSelectedTable(AUTO_ASSIGNED_TABLE);
     }
     setFlowStep("confirm");
@@ -216,6 +220,7 @@ export function PreorderProvider({ children }: { children: ReactNode }) {
       setPeopleCount,
       setSelectedTable,
       proceedToTableSelection,
+      confirmWithoutTable,
       proceedToConfirm,
       completePreorder,
       closeFlow,
@@ -240,6 +245,7 @@ export function PreorderProvider({ children }: { children: ReactNode }) {
       setVisitTime,
       setPeopleCount,
       proceedToTableSelection,
+      confirmWithoutTable,
       proceedToConfirm,
       completePreorder,
       closeFlow,

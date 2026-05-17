@@ -9,6 +9,7 @@ import {
 } from "@/lib/preorder";
 import { PriceLabel } from "@/components/ui/PriceLabel";
 import { usePreorder } from "@/context/PreorderContext";
+import { hasTablePlan } from "@/lib/table-plans";
 
 interface TimeSelectionModalProps {
   open: boolean;
@@ -16,16 +17,19 @@ interface TimeSelectionModalProps {
 
 export function TimeSelectionModal({ open }: TimeSelectionModalProps) {
   const {
+    restaurantId,
     visitTime,
     peopleCount,
     setVisitTime,
     setPeopleCount,
+    confirmWithoutTable,
     proceedToTableSelection,
     closeFlow,
     total,
   } = usePreorder();
 
   const canProceed = visitTime !== null && peopleCount !== null;
+  const showTableOption = restaurantId ? hasTablePlan(restaurantId) : false;
 
   return (
     <AnimatePresence>
@@ -92,11 +96,23 @@ export function TimeSelectionModal({ open }: TimeSelectionModalProps) {
                 type="button"
                 whileTap={canProceed ? { scale: 0.98 } : undefined}
                 disabled={!canProceed}
-                onClick={proceedToTableSelection}
+                onClick={confirmWithoutTable}
                 className="mt-4 w-full rounded-2xl bg-accent py-4 text-sm font-semibold text-white shadow-glow disabled:opacity-40"
               >
-                Выбрать столик
+                Оформить предзаказ
               </motion.button>
+
+              {showTableOption && (
+                <motion.button
+                  type="button"
+                  whileTap={canProceed ? { scale: 0.98 } : undefined}
+                  disabled={!canProceed}
+                  onClick={proceedToTableSelection}
+                  className="mt-2 w-full rounded-2xl border border-charcoal/10 bg-white py-3.5 text-sm font-semibold text-charcoal disabled:opacity-40"
+                >
+                  Выбрать столик
+                </motion.button>
+              )}
             </div>
             </motion.div>
           </div>

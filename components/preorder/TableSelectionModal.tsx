@@ -32,9 +32,11 @@ export function TableSelectionModal({ open }: TableSelectionModalProps) {
   const plan = restaurantId ? getTablePlan(restaurantId) : null;
   const showFloorPlan = restaurantId ? hasTablePlan(restaurantId) : false;
 
-  const canConfirm =
-    selectedTable !== null &&
-    (selectedTable.autoAssigned || Boolean(selectedTable.tableId));
+  const canConfirm = showFloorPlan
+    ? selectedTable !== null &&
+      !selectedTable.autoAssigned &&
+      Boolean(selectedTable.tableId)
+    : selectedTable?.autoAssigned === true;
 
   const handleSelectTable = (table: RestaurantTable) => {
     if (!peopleCount || !isTableSelectable(table, peopleCount)) return;
