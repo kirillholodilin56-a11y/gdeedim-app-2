@@ -2,26 +2,56 @@
 
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { LiveBadge } from "@/components/ui/LiveBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { MenuDishRow } from "@/components/preorder/MenuDishRow";
+import { TableBookingFlow } from "@/components/booking/TableBookingFlow";
 import { PreorderBar } from "@/components/preorder/PreorderBar";
 import { PreorderFlow } from "@/components/preorder/PreorderFlow";
+import { ReviewsSheet } from "@/components/reviews/ReviewsSheet";
 import { usePreorder } from "@/context/PreorderContext";
+import { getReviewsForRestaurant } from "@/lib/restaurant-reviews";
+import {
+  ALL_MENU_CATEGORY,
+  filterMenuByCategory,
+  getMenuCategoriesForRestaurant,
+} from "@/lib/menu-categories";
 import { getMenuItemsByRestaurantId, getRestaurantById } from "@/lib/mock-data";
-
-const menuCategories = ["Все", "Закуски", "Основные", "Десерты"];
 
 export default function RestaurantDetailPage() {
   const params = useParams();
   const router = useRouter();
   const restaurant = getRestaurantById(params.id as string);
   const { hasCartForRestaurant } = usePreorder();
+  const [activeCategory, setActiveCategory] = useState(ALL_MENU_CATEGORY);
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [reviewsOpen, setReviewsOpen] = useState(false);
+
+  const venueMenu = useMemo(
+    () =>
+      restaurant ? getMenuItemsByRestaurantId(restaurant.id) : [],
+    [restaurant]
+  );
+
+  const menuCategories = useMemo(
+    () => getMenuCategoriesForRestaurant(venueMenu),
+    [venueMenu]
+  );
+
+  const filteredMenu = useMemo(
+    () => filterMenuByCategory(venueMenu, activeCategory),
+    [venueMenu, activeCategory]
+  );
+
+  useEffect(() => {
+    setActiveCategory(ALL_MENU_CATEGORY);
+  }, [restaurant?.id]);
 
   if (!restaurant) {
     return (
-      <motion.div className="flex min-h-screen flex-col items-center justify-center gap-4 px-5">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-5">
         <p className="text-muted">Заведение не найдено</p>
         <button
           onClick={() => router.push("/restaurants")}
@@ -29,22 +59,19 @@ export default function RestaurantDetailPage() {
         >
           Назад
         </button>
-      </motion.div>
+      </div>
     );
   }
 
-  const venueMenu = getMenuItemsByRestaurantId(restaurant.id);
   const stopListCount = venueMenu.filter((m) => !m.isAvailable).length;
   const cartVisible = hasCartForRestaurant(restaurant.id);
-
-  const scrollToMenu = () => {
-    document.getElementById("venue-menu")?.scrollIntoView({ behavior: "smooth" });
-  };
+  const reviewSummary = getReviewsForRestaurant(
+    restaurant.id,
+    restaurant.rating
+  );
 
   return (
-    <motion.div
-      className={`min-h-screen ${cartVisible ? "pb-36" : "pb-8"}`}
-    >
+    <div className={`min-h-screen ${cartVisible ? "pb-36" : "pb-8"}`}>
       <div className="relative h-[320px] w-full">
         <Image
           src={restaurant.image}
@@ -104,63 +131,105 @@ export default function RestaurantDetailPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <motion.button
+            type="button"
             whileTap={{ scale: 0.97 }}
+            onClick={() => setBookingOpen(true)}
             className="rounded-2xl bg-charcoal py-3.5 text-sm font-medium text-white"
           >
-            Забронировать
+            Забронировать столик
           </motion.button>
           <motion.button
             type="button"
             whileTap={{ scale: 0.97 }}
-            onClick={scrollToMenu}
+            onClick={() => setReviewsOpen(true)}
             className="glass rounded-2xl py-3.5 text-sm font-medium text-charcoal"
           >
-            Предзаказ
+            Отзывы
           </motion.button>
         </div>
 
         <div className="mt-6 hide-scrollbar flex gap-2 overflow-x-auto pb-1">
-          {menuCategories.map((cat, i) => (
-            <button
-              key={cat}
-              type="button"
-              className={`shrink-0 rounded-2xl px-4 py-2 text-sm font-medium ${
-                i === 0
-                  ? "bg-charcoal text-white"
-                  : "bg-white text-charcoal shadow-card"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+          {menuCategories.map((cat) => {
+            const isActive = activeCategory === cat;
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setActiveCategory(cat)}
+                className={`shrink-0 rounded-2xl px-4 py-2 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-charcoal text-white"
+                    : "bg-white text-charcoal shadow-card"
+                }`}
+              >
+                {cat}
+              </button>
+            );
+          })}
         </div>
 
-        <motion.div
+        <div
           id="venue-menu"
           className="mt-5 flex scroll-mt-24 items-center justify-between"
         >
           <h2 className="text-lg font-semibold">Меню</h2>
           <span className="text-sm font-medium text-muted">
-            {venueMenu.length} позиций
+            {filteredMenu.length}{" "}
+            {filteredMenu.length === 1 ? "позиция" : filteredMenu.length < 5 ? "позиции" : "позиций"}
           </span>
-        </motion.div>
+        </div>
 
-        <motion.div className="mt-3 space-y-3">
-          {venueMenu.map((item, i) => (
-            <MenuDishRow
-              key={item.id}
-              item={item}
-              restaurantId={restaurant.id}
-              restaurantName={restaurant.name}
-              index={i}
-            />
-          ))}
-        </motion.div>
+        <AnimatePresence mode="wait">
+          {filteredMenu.length === 0 ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2 }}
+              className="mt-3 rounded-2xl bg-white px-5 py-10 text-center shadow-card"
+            >
+              <p className="text-sm text-muted">
+                В этой категории пока нет блюд.
+              </p>
+            </motion.div>
+          ) : (
+            <motion.div
+              key={activeCategory}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.22 }}
+              className="mt-3 space-y-3"
+            >
+              {filteredMenu.map((item, i) => (
+                <MenuDishRow
+                  key={item.id}
+                  item={item}
+                  restaurantId={restaurant.id}
+                  restaurantName={restaurant.name}
+                  index={i}
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <PreorderBar restaurantId={restaurant.id} />
       <PreorderFlow />
-    </motion.div>
+      <TableBookingFlow
+        restaurantId={restaurant.id}
+        restaurantName={restaurant.name}
+        open={bookingOpen}
+        onClose={() => setBookingOpen(false)}
+      />
+      <ReviewsSheet
+        open={reviewsOpen}
+        onClose={() => setReviewsOpen(false)}
+        summary={reviewSummary}
+      />
+    </div>
   );
 }
 
