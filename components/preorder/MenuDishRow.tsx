@@ -1,10 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import type { MenuItem } from "@/lib/types";
-import { getEffectivePrice } from "@/lib/preorder";
+import {
+  canIncreaseMenuItemQuantity,
+  getEffectivePrice,
+} from "@/lib/preorder";
 import { usePreorder } from "@/context/PreorderContext";
+import { MenuItemQuantityControl } from "./MenuItemQuantityControl";
 
 interface MenuDishRowProps {
   item: MenuItem;
@@ -19,8 +23,11 @@ export function MenuDishRow({
   restaurantName,
   index = 0,
 }: MenuDishRowProps) {
-  const { addItem } = usePreorder();
+  const { lines, addItem, addOne, removeOne } = usePreorder();
   const effectivePrice = getEffectivePrice(item);
+  const quantity =
+    lines.find((line) => line.menuItemId === item.id)?.quantity ?? 0;
+  const canIncrease = canIncreaseMenuItemQuantity(quantity, item.description);
 
   return (
     <motion.div
@@ -31,10 +38,7 @@ export function MenuDishRow({
         !item.isAvailable ? "opacity-60" : ""
       }`}
     >
-      <motion.div
-        whileTap={item.isAvailable ? { scale: 0.98 } : undefined}
-        className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl"
-      >
+      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl">
         <Image
           src={item.image}
           alt={item.name}
@@ -42,7 +46,7 @@ export function MenuDishRow({
           className="object-cover"
           sizes="64px"
         />
-      </motion.div>
+      </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-start justify-between gap-2">
@@ -75,16 +79,40 @@ export function MenuDishRow({
             )}
           </p>
           {item.isAvailable ? (
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.94 }}
-              onClick={() => addItem(restaurantId, restaurantName, item)}
-              className="shrink-0 rounded-xl bg-accent px-3.5 py-1.5 text-xs font-semibold text-white shadow-glow"
-            >
-              Добавить
-            </motion.button>
+            <AnimatePresence mode="wait" initial={false}>
+              {quantity === 0 ? (
+                <motion.button
+                  key="add"
+                  type="button"
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.92 }}
+                  transition={{ duration: 0.15 }}
+                  whileTap={{ scale: 0.94 }}
+                  onClick={() => addItem(restaurantId, restaurantName, item)}
+                  className="shrink-0 rounded-full bg-accent px-3.5 py-1.5 text-xs font-semibold text-white shadow-glow"
+                >
+                  Добавить
+                </motion.button>
+              ) : (
+                <motion.div
+                  key="stepper"
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.92 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <MenuItemQuantityControl
+                    quantity={quantity}
+                    onDecrease={() => removeOne(item.id)}
+                    onIncrease={() => addOne(item.id)}
+                    increaseDisabled={!canIncrease}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           ) : (
-            <span className="shrink-0 rounded-xl bg-muted/10 px-3 py-1.5 text-xs font-medium text-muted">
+            <span className="shrink-0 rounded-full bg-muted/10 px-3 py-1.5 text-xs font-medium text-muted">
               Стоп-лист
             </span>
           )}

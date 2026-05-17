@@ -25,6 +25,21 @@ export function canIncreaseQuantity(
   return currentQty < getOfferStockLimit(offer);
 }
 
+/** Updates «осталось N …» based on items already in the reservation. */
+export function formatRemainingAvailability(
+  availability: string,
+  reservedQty: number
+): string {
+  const remaining = Math.max(
+    0,
+    parseStockLimit(availability) - reservedQty
+  );
+  if (/осталось\s+\d+/i.test(availability)) {
+    return availability.replace(/осталось\s+\d+/i, `осталось ${remaining}`);
+  }
+  return availability;
+}
+
 export function getReservationLineTotal(line: DiscountReservationLine): number {
   return line.offer.newPrice * line.quantity;
 }

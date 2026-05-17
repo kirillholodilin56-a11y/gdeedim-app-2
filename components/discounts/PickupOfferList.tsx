@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { PriceLabel } from "@/components/ui/PriceLabel";
 import type { PickupOffer } from "@/lib/types";
+import { formatRemainingAvailability } from "@/lib/discount-reservation";
 import { useDiscountReservation } from "@/context/DiscountReservationContext";
+import { DiscountOfferQuantityControl } from "./DiscountOfferQuantityControl";
 
 interface PickupOfferListProps {
   offers: PickupOffer[];
@@ -15,7 +17,7 @@ export function PickupOfferList({
   offers,
   highlightedOfferId,
 }: PickupOfferListProps) {
-  const { addOffer, getQuantity, canAddMore, isAtStockLimit } =
+  const { addOffer, addOne, removeOne, getQuantity, canAddMore } =
     useDiscountReservation();
 
   return (
@@ -24,8 +26,11 @@ export function PickupOfferList({
         const isHighlighted = highlightedOfferId === offer.id;
         const quantity = getQuantity(offer.id);
         const inCart = quantity > 0;
-        const atLimit = isAtStockLimit(offer.id);
-        const canAdd = canAddMore(offer.id);
+        const canIncrease = canAddMore(offer.id);
+        const availabilityLabel = formatRemainingAvailability(
+          offer.availability,
+          quantity
+        );
 
         return (
           <motion.article
@@ -52,9 +57,14 @@ export function PickupOfferList({
                 <p className="mt-2 text-[11px] text-muted">
                   Самовывоз · {offer.pickupWindow}
                 </p>
-                <p className="mt-0.5 text-[11px] font-medium text-sage">
-                  {offer.availability}
-                </p>
+                <motion.p
+                  key={availabilityLabel}
+                  initial={{ opacity: 0.6 }}
+                  animate={{ opacity: 1 }}
+                  className="mt-0.5 text-[11px] font-medium text-sage"
+                >
+                  {availabilityLabel}
+                </motion.p>
               </div>
               <div className="shrink-0 text-right">
                 <span className="inline-block rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-bold text-accent">
@@ -70,27 +80,46 @@ export function PickupOfferList({
               </div>
             </div>
 
-            <motion.button
-              type="button"
-              whileTap={canAdd ? { scale: 0.97 } : undefined}
-              disabled={!canAdd}
-              onClick={() => addOffer(offer)}
-              className={`mt-4 w-full rounded-2xl py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-                inCart ? "bg-sage/15 text-sage" : "bg-charcoal text-white"
-              }`}
-            >
-              {inCart
-                ? canAdd
-                  ? "Добавлено · +1"
-                  : "В корзине"
-                : "Забронировать"}
-            </motion.button>
-
-            {atLimit && (
-              <p className="mt-2 text-center text-xs text-muted">
-                Больше нет в наличии
-              </p>
-            )}
+            <div className="mt-4 flex min-h-[44px] items-center justify-center">
+              <AnimatePresence mode="wait" initial={false}>
+                {quantity === 0 ? (
+                  <motion.button
+                    key="add"
+                    type="button"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => addOffer(offer)}
+                    className="w-full rounded-2xl bg-charcoal py-3 text-sm font-semibold text-white"
+                  >
+                    Добавить
+                  </motion.button>
+                ) : (
+                  <motion.div
+                    key="stepper"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex w-full flex-col items-center gap-2"
+                  >
+                    <DiscountOfferQuantityControl
+                      quantity={quantity}
+                      onDecrease={() => removeOne(offer.id)}
+                      onIncrease={() => addOne(offer.id)}
+                      increaseDisabled={!canIncrease}
+                    />
+                    {!canIncrease && (
+                      <p className="text-center text-xs text-muted">
+                        Больше нет в наличии
+                      </p>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </motion.article>
         );
       })}

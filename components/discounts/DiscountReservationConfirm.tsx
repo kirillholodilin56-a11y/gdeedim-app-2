@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  formatRemainingAvailability,
   getReservationLineOldTotal,
   getReservationLineTotal,
 } from "@/lib/discount-reservation";
@@ -108,7 +109,10 @@ export function DiscountReservationConfirm() {
                     <div className="flex justify-between gap-2">
                       <span className="text-muted">Наличие</span>
                       <span className="text-right font-medium text-sage">
-                        {line.offer.availability}
+                        {formatRemainingAvailability(
+                          line.offer.availability,
+                          line.quantity
+                        )}
                       </span>
                     </div>
                   </div>

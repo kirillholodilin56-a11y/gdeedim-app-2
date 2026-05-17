@@ -34,6 +34,21 @@ export function getCartItemCount(lines: PreorderLine[]): number {
   return lines.reduce((sum, line) => sum + line.quantity, 0);
 }
 
+/** Parse stock from descriptions like «осталось 3 порции» */
+export function getMenuItemStockLimit(description: string): number {
+  const match = description.match(/осталось\s+(\d+)/i);
+  if (!match) return 99;
+  const n = parseInt(match[1], 10);
+  return Number.isFinite(n) && n > 0 ? n : 99;
+}
+
+export function canIncreaseMenuItemQuantity(
+  currentQty: number,
+  description: string
+): boolean {
+  return currentQty < getMenuItemStockLimit(description);
+}
+
 export function menuItemToLine(item: MenuItem): Omit<PreorderLine, "quantity"> {
   const unitPrice = getEffectivePrice(item);
   return {
