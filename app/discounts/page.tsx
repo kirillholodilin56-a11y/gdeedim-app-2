@@ -3,12 +3,20 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { MobileShell } from "@/components/mobile/MobileShell";
+import { DiscountReservationBar } from "@/components/discounts/DiscountReservationBar";
+import { DiscountReservationConfirm } from "@/components/discounts/DiscountReservationConfirm";
 import { PickupOfferList } from "@/components/discounts/PickupOfferList";
 import { TomskDiscountMap } from "@/components/discounts/TomskDiscountMap";
+import {
+  DiscountReservationProvider,
+  useDiscountReservation,
+} from "@/context/DiscountReservationContext";
 import { discountMapPins, pickupOffers } from "@/lib/discount-mock";
 
-export default function DiscountsPage() {
+function DiscountsContent() {
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
+  const { lines } = useDiscountReservation();
+  const hasReservation = lines.length > 0;
 
   const visibleOffers = useMemo(() => {
     if (!selectedPinId) return pickupOffers.slice(0, 5);
@@ -80,7 +88,11 @@ export default function DiscountsPage() {
         скидку, бронируете позицию и забираете её в заведении — без доставки.
       </motion.p>
 
-      <section className="mt-5 rounded-t-4xl bg-white px-5 pb-4 pt-5 shadow-[0_-8px_32px_rgba(28,27,26,0.06)]">
+      <section
+        className={`mt-5 rounded-t-4xl bg-white px-5 pt-5 shadow-[0_-8px_32px_rgba(28,27,26,0.06)] ${
+          hasReservation ? "pb-36" : "pb-4"
+        }`}
+      >
         <div className="mb-1 flex items-center justify-center">
           <span className="h-1 w-10 rounded-full bg-charcoal/10" />
         </div>
@@ -97,7 +109,18 @@ export default function DiscountsPage() {
           highlightedOfferId={highlightedOfferId}
         />
       </section>
+
+      <DiscountReservationBar />
+      <DiscountReservationConfirm />
     </MobileShell>
+  );
+}
+
+export default function DiscountsPage() {
+  return (
+    <DiscountReservationProvider>
+      <DiscountsContent />
+    </DiscountReservationProvider>
   );
 }
 

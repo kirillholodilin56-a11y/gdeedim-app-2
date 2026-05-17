@@ -5,14 +5,19 @@ import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { LiveBadge } from "@/components/ui/LiveBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { MenuDishRow } from "@/components/preorder/MenuDishRow";
+import { PreorderBar } from "@/components/preorder/PreorderBar";
+import { PreorderFlow } from "@/components/preorder/PreorderFlow";
+import { usePreorder } from "@/context/PreorderContext";
 import { getMenuItemsByRestaurantId, getRestaurantById } from "@/lib/mock-data";
 
-const menuCategories = ["Закуски", "Основные", "Десерты"];
+const menuCategories = ["Все", "Закуски", "Основные", "Десерты"];
 
 export default function RestaurantDetailPage() {
   const params = useParams();
   const router = useRouter();
   const restaurant = getRestaurantById(params.id as string);
+  const { hasCartForRestaurant } = usePreorder();
 
   if (!restaurant) {
     return (
@@ -20,7 +25,7 @@ export default function RestaurantDetailPage() {
         <p className="text-muted">Заведение не найдено</p>
         <button
           onClick={() => router.push("/restaurants")}
-          className="text-accent font-medium"
+          className="font-medium text-accent"
         >
           Назад
         </button>
@@ -29,11 +34,17 @@ export default function RestaurantDetailPage() {
   }
 
   const venueMenu = getMenuItemsByRestaurantId(restaurant.id);
-  const previewItems = venueMenu.slice(0, 4);
   const stopListCount = venueMenu.filter((m) => !m.isAvailable).length;
+  const cartVisible = hasCartForRestaurant(restaurant.id);
+
+  const scrollToMenu = () => {
+    document.getElementById("venue-menu")?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
-    <div className="min-h-screen pb-8">
+    <motion.div
+      className={`min-h-screen ${cartVisible ? "pb-36" : "pb-8"}`}
+    >
       <div className="relative h-[320px] w-full">
         <Image
           src={restaurant.image}
@@ -85,6 +96,12 @@ export default function RestaurantDetailPage() {
           )}
         </div>
 
+        {restaurant.description && (
+          <p className="mb-5 text-sm leading-relaxed text-muted">
+            {restaurant.description}
+          </p>
+        )}
+
         <div className="grid grid-cols-2 gap-3">
           <motion.button
             whileTap={{ scale: 0.97 }}
@@ -93,7 +110,9 @@ export default function RestaurantDetailPage() {
             Забронировать
           </motion.button>
           <motion.button
+            type="button"
             whileTap={{ scale: 0.97 }}
+            onClick={scrollToMenu}
             className="glass rounded-2xl py-3.5 text-sm font-medium text-charcoal"
           >
             Предзаказ
@@ -104,8 +123,11 @@ export default function RestaurantDetailPage() {
           {menuCategories.map((cat, i) => (
             <button
               key={cat}
+              type="button"
               className={`shrink-0 rounded-2xl px-4 py-2 text-sm font-medium ${
-                i === 0 ? "bg-charcoal text-white" : "bg-white shadow-card text-charcoal"
+                i === 0
+                  ? "bg-charcoal text-white"
+                  : "bg-white text-charcoal shadow-card"
               }`}
             >
               {cat}
@@ -113,7 +135,10 @@ export default function RestaurantDetailPage() {
           ))}
         </div>
 
-        <motion.div id="venue-menu" className="mt-5 flex scroll-mt-24 items-center justify-between">
+        <motion.div
+          id="venue-menu"
+          className="mt-5 flex scroll-mt-24 items-center justify-between"
+        >
           <h2 className="text-lg font-semibold">Меню</h2>
           <span className="text-sm font-medium text-muted">
             {venueMenu.length} позиций
@@ -121,63 +146,21 @@ export default function RestaurantDetailPage() {
         </motion.div>
 
         <motion.div className="mt-3 space-y-3">
-          {previewItems.map((item, i) => (
-            <motion.div
+          {venueMenu.map((item, i) => (
+            <MenuDishRow
               key={item.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className={`flex gap-3 rounded-2xl bg-white p-3 shadow-card ${
-                !item.isAvailable ? "opacity-60" : ""
-              }`}
-            >
-              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl">
-                <Image
-                  src={item.image}
-                  alt={item.name}
-                  fill
-                  className="object-cover"
-                  sizes="64px"
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-medium">{item.name}</p>
-                  {!item.isAvailable && (
-                    <span className="shrink-0 rounded-full bg-muted/15 px-2 py-0.5 text-[10px] font-medium text-muted">
-                      Стоп
-                    </span>
-                  )}
-                  {item.isDiscount && item.isAvailable && (
-                    <span className="shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent">
-                      −{item.discountPercent}%
-                    </span>
-                  )}
-                </div>
-                <p className="mt-0.5 truncate text-xs text-muted">
-                  {item.description}
-                </p>
-                <p className="mt-1 text-sm font-semibold">
-                  {item.isDiscount && item.discountPercent ? (
-                    <>
-                      <span className="text-muted line-through mr-1.5 text-xs font-normal">
-                        {item.price} ₽
-                      </span>
-                      {Math.round(
-                        item.price * (1 - item.discountPercent / 100)
-                      )}{" "}
-                      ₽
-                    </>
-                  ) : (
-                    <>{item.price} ₽</>
-                  )}
-                </p>
-              </div>
-            </motion.div>
+              item={item}
+              restaurantId={restaurant.id}
+              restaurantName={restaurant.name}
+              index={i}
+            />
           ))}
         </motion.div>
       </div>
-    </div>
+
+      <PreorderBar restaurantId={restaurant.id} />
+      <PreorderFlow />
+    </motion.div>
   );
 }
 

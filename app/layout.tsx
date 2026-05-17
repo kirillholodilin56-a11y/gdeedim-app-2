@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { AppProviders } from "@/components/providers/AppProviders";
 import "./globals.css";
 
 const inter = Inter({
@@ -35,7 +36,7 @@ export default function RootLayout({
     <html lang="ru">
       <body className={`${inter.variable} font-sans`}>
         <div className="mx-auto min-h-screen w-full max-w-[430px] bg-cream shadow-2xl shadow-charcoal/5">
-          {children}
+          <AppProviders>{children}</AppProviders>
         </div>
       </body>
     </html>

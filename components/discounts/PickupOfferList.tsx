@@ -3,17 +3,25 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { PickupOffer } from "@/lib/types";
+import { useDiscountReservation } from "@/context/DiscountReservationContext";
 
 interface PickupOfferListProps {
   offers: PickupOffer[];
   highlightedOfferId?: string | null;
 }
 
-export function PickupOfferList({ offers, highlightedOfferId }: PickupOfferListProps) {
+export function PickupOfferList({
+  offers,
+  highlightedOfferId,
+}: PickupOfferListProps) {
+  const { addOffer, isInCart } = useDiscountReservation();
+
   return (
     <div className="space-y-3">
       {offers.map((offer, i) => {
         const isHighlighted = highlightedOfferId === offer.id;
+        const inCart = isInCart(offer.id);
+
         return (
           <motion.article
             key={offer.id}
@@ -23,7 +31,7 @@ export function PickupOfferList({ offers, highlightedOfferId }: PickupOfferListP
             transition={{ delay: i * 0.04, duration: 0.35 }}
             className={`rounded-2xl bg-white p-4 shadow-card transition-shadow ${
               isHighlighted ? "ring-2 ring-accent/30" : ""
-            }`}
+            } ${inCart ? "ring-2 ring-sage/35" : ""}`}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
@@ -37,7 +45,7 @@ export function PickupOfferList({ offers, highlightedOfferId }: PickupOfferListP
                   {offer.dishName}
                 </h3>
                 <p className="mt-2 text-[11px] text-muted">
-                  {offer.pickupWindow}
+                  Самовывоз · {offer.pickupWindow}
                 </p>
                 <p className="mt-0.5 text-[11px] font-medium text-sage">
                   {offer.availability}
@@ -55,6 +63,19 @@ export function PickupOfferList({ offers, highlightedOfferId }: PickupOfferListP
                 </p>
               </div>
             </div>
+
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              onClick={() => addOffer(offer)}
+              className={`mt-4 w-full rounded-2xl py-3 text-sm font-semibold transition-colors ${
+                inCart
+                  ? "bg-sage/15 text-sage"
+                  : "bg-charcoal text-white"
+              }`}
+            >
+              {inCart ? "Добавлено · +1" : "Забронировать"}
+            </motion.button>
           </motion.article>
         );
       })}
