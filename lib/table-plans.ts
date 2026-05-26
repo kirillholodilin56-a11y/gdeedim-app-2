@@ -157,7 +157,14 @@ export function hasSelectableTablesForParty(
   plan: RestaurantTablePlan,
   peopleCount: PeopleCount
 ): boolean {
-  return plan.tables.some((table) => isTableSelectable(table, peopleCount));
+  return getSelectableTables(plan, peopleCount).length > 0;
+}
+
+export function getSelectableTables(
+  plan: RestaurantTablePlan,
+  peopleCount: PeopleCount
+): RestaurantTable[] {
+  return plan.tables.filter((table) => isTableSelectable(table, peopleCount));
 }
 
 export function tableToSelection(table: RestaurantTable): SelectedTable {

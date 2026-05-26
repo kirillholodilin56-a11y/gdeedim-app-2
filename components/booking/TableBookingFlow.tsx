@@ -58,6 +58,11 @@ export function TableBookingFlow({
     setStep("table");
   };
 
+  const backToTimeSelection = () => {
+    setSelectedTable(null);
+    setStep("time");
+  };
+
   const confirmWithTable = () => {
     if (!visitTime || !peopleCount) return;
     setStep("confirm");
@@ -82,6 +87,8 @@ export function TableBookingFlow({
         peopleCount={peopleCount}
         selectedTable={selectedTable}
         onSelectTable={setSelectedTable}
+        onBack={backToTimeSelection}
+        onContinueWithoutTable={confirmWithoutTable}
         onConfirm={confirmWithTable}
         onClose={handleClose}
       />
