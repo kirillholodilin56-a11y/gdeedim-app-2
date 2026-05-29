@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { MenuItemImage } from "@/components/ui/MenuItemImage";
 import { PriceLabel } from "@/components/ui/PriceLabel";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import {
@@ -85,6 +86,14 @@ export function DiscountReservationBar() {
                               key={line.offerId}
                               className="rounded-2xl bg-cream/60 p-3"
                             >
+                              <div className="flex gap-3">
+                                <MenuItemImage
+                                  name={line.offer.dishName}
+                                  alt={line.offer.dishName}
+                                  className="h-12 w-12 shrink-0"
+                                  sizes="48px"
+                                />
+                                <div className="min-w-0 flex-1">
                               <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0 flex-1">
                                   <p className="truncate text-sm font-medium">
@@ -125,6 +134,8 @@ export function DiscountReservationBar() {
                                     amount={getReservationLineTotal(line)}
                                     className="text-sm font-semibold text-charcoal"
                                   />
+                                </div>
+                              </div>
                                 </div>
                               </div>
                             </li>

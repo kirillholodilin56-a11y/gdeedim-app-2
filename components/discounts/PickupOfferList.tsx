@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
+import { MenuItemImage } from "@/components/ui/MenuItemImage";
 import { PriceLabel } from "@/components/ui/PriceLabel";
 import type { PickupOffer } from "@/lib/types";
 import { formatRemainingAvailability } from "@/lib/discount-reservation";
@@ -43,7 +44,13 @@ export function PickupOfferList({
               isHighlighted ? "ring-2 ring-accent/30" : ""
             } ${inCart ? "ring-2 ring-sage/35" : ""}`}
           >
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <MenuItemImage
+                name={offer.dishName}
+                alt={offer.dishName}
+                rounded="2xl"
+              />
+              <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <Link
                   href={`/restaurants/${offer.restaurantId}`}
@@ -77,6 +84,7 @@ export function PickupOfferList({
                   amount={offer.newPrice}
                   className="text-lg font-bold text-charcoal"
                 />
+              </div>
               </div>
             </div>
 

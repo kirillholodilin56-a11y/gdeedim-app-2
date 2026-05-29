@@ -10,7 +10,7 @@ interface LiveBadgeProps {
 export function LiveBadge({ label = "Live", size = "sm" }: LiveBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full bg-live/10 font-medium text-live ${
+      className={`inline-flex items-center gap-1.5 rounded-full bg-white/90 font-medium text-live backdrop-blur-sm ${
         size === "sm" ? "px-2 py-0.5 text-[10px]" : "px-3 py-1 text-xs"
       }`}
     >

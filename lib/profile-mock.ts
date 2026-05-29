@@ -70,7 +70,7 @@ export const mockPreorderHistory: MockPreorderHistory[] = [
   {
     id: "po-1",
     restaurantName: "Surf Coffee x Lamp",
-    dishesLabel: "Айс латте · чизкейк",
+    dishesLabel: "Айс латте · вупи-пай",
     visitTimeLabel: "Сегодня · 19:00",
     total: 575,
     status: "awaiting_visit",

@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { MenuItemImage } from "@/components/ui/MenuItemImage";
 import { PriceLabel } from "@/components/ui/PriceLabel";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { getLineTotal } from "@/lib/preorder";
@@ -82,6 +83,12 @@ export function PreorderBar({ restaurantId }: PreorderBarProps) {
                               key={line.menuItemId}
                               className="flex items-center gap-3"
                             >
+                              <MenuItemImage
+                                name={line.name}
+                                alt={line.name}
+                                className="h-12 w-12 shrink-0"
+                                sizes="48px"
+                              />
                               <div className="min-w-0 flex-1">
                                 <p className="truncate text-sm font-medium">
                                   {line.name}

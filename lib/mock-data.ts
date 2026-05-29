@@ -1,7 +1,8 @@
 // demo data for Tomsk MVP — not affiliated with listed venues
-// Images: local placeholders only (/placeholder-venue.svg, /placeholder-dish.svg)
+// Images: venues in /public/restaurants, dishes in /public/menu (by name)
 
 import type { Category, LiveUpdate, MenuItem, Restaurant } from "./types";
+import { resolveMenuItemImages } from "./menu-images";
 
 export const categories: Category[] = [
   { id: "1", label: "Все", icon: "✦" },
@@ -177,13 +178,13 @@ export const menuItems: MenuItem[] = [
   {
     id: "tk3",
     restaurantId: "territoriya-kofe",
-    name: "Бейгл с форелью",
-    description: "Заканчивается · осталось 3 порции",
-    price: 550,
-    category: "Завтраки",
+    name: "Хот-дог сырный",
+    description: "В наличии",
+    price: 320,
+    category: "Закуски",
     image: "/placeholder-dish.svg",
     isAvailable: true,
-    updatedAt: "5 мин назад",
+    updatedAt: "4 мин назад",
   },
   {
     id: "tk4",
@@ -210,15 +211,15 @@ export const menuItems: MenuItem[] = [
   {
     id: "tk6",
     restaurantId: "territoriya-kofe",
-    name: "Круассан миндальный",
+    name: "Бургер бриошь с рваной говядиной",
     description: "Скидка −25% · до 21:00",
-    price: 240,
-    category: "Выпечка",
+    price: 420,
+    category: "Закуски",
     image: "/placeholder-dish.svg",
     isAvailable: true,
     isDiscount: true,
     discountPercent: 25,
-    updatedAt: "8 мин назад",
+    updatedAt: "6 мин назад",
   },
   // Surf Coffee x Lamp
   {
@@ -257,7 +258,7 @@ export const menuItems: MenuItem[] = [
   {
     id: "sc4",
     restaurantId: "surf-coffee-lamp",
-    name: "Сэндвич с индейкой",
+    name: "Грилд-чиз с томленными овощами и брынзой",
     description: "Заканчивается · осталось 2 порции",
     price: 390,
     category: "Закуски",
@@ -268,7 +269,7 @@ export const menuItems: MenuItem[] = [
   {
     id: "sc5",
     restaurantId: "surf-coffee-lamp",
-    name: "Чизкейк",
+    name: "Вупи-пай вареная сгущенка",
     description: "Скидка −20% · до 20:30",
     price: 320,
     category: "Десерты",
@@ -354,7 +355,7 @@ export const menuItems: MenuItem[] = [
     name: "Том ям с креветкой",
     description: "В наличии",
     price: 690,
-    category: "Супы",
+    category: "Основные",
     image: "/placeholder-dish.svg",
     isAvailable: true,
     updatedAt: "2 мин назад",
@@ -373,10 +374,10 @@ export const menuItems: MenuItem[] = [
   {
     id: "ki4",
     restaurantId: "kintsugi",
-    name: "Ролл с лососем",
+    name: "Детский рамен",
     description: "В наличии",
-    price: 620,
-    category: "Роллы",
+    price: 420,
+    category: "Детское меню",
     image: "/placeholder-dish.svg",
     isAvailable: true,
     updatedAt: "4 мин назад",
@@ -707,7 +708,7 @@ export const liveUpdates: LiveUpdate[] = [
     id: "u3",
     restaurantId: "territoriya-kofe",
     restaurantName: "Территория Кофе",
-    message: "Круассан миндальный — скидка до 21:00",
+    message: "Бургер бриошь с рваной говядиной — скидка до 21:00",
     time: "7 мин",
     type: "discount",
   },
@@ -731,7 +732,7 @@ export const liveUpdates: LiveUpdate[] = [
     id: "u6",
     restaurantId: "surf-coffee-lamp",
     restaurantName: "Surf Coffee x Lamp",
-    message: "Чизкейк −20% · скидка до 20:30",
+    message: "Вупи-пай вареная сгущенка −20% · скидка до 20:30",
     time: "10 мин",
     type: "discount",
   },
@@ -756,7 +757,7 @@ export const liveUpdates: LiveUpdate[] = [
 export const antiWasteDeals = [
   {
     id: "aw1",
-    title: "Круассан миндальный",
+    title: "Бургер бриошь с рваной говядиной",
     venue: "Территория Кофе",
     discount: "−25%",
     until: "до 21:00",
@@ -798,5 +799,7 @@ export function getRestaurantById(id: string): Restaurant | undefined {
 }
 
 export function getMenuItemsByRestaurantId(restaurantId: string): MenuItem[] {
-  return menuItems.filter((item) => item.restaurantId === restaurantId);
+  return resolveMenuItemImages(
+    menuItems.filter((item) => item.restaurantId === restaurantId)
+  );
 }

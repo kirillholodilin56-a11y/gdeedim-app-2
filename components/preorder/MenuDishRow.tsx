@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
+import { MenuItemImage } from "@/components/ui/MenuItemImage";
 import type { MenuItem } from "@/lib/types";
 import {
   canIncreaseMenuItemQuantity,
@@ -38,15 +38,7 @@ export function MenuDishRow({
         !item.isAvailable ? "opacity-60" : ""
       }`}
     >
-      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl">
-        <Image
-          src={item.image}
-          alt={item.name}
-          fill
-          className="object-cover"
-          sizes="64px"
-        />
-      </div>
+      <MenuItemImage name={item.name} alt={item.name} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-start justify-between gap-2">
