@@ -1,7 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { PreorderQrModal } from "@/components/profile/PreorderQrModal";
+import { ReviewSubmitSheet } from "@/components/reviews/ReviewSubmitSheet";
 import { PriceLabel } from "@/components/ui/PriceLabel";
 import type {
   MockBooking,
@@ -9,6 +11,7 @@ import type {
   MockPreorderHistory,
   ProfileTabId,
 } from "@/lib/profile-mock";
+import { useStoredReviews } from "@/hooks/useStoredReviews";
 
 interface ProfileHistoryPanelProps {
   tab: ProfileTabId;
@@ -23,6 +26,10 @@ export function ProfileHistoryPanel({
   preorders,
   discounts,
 }: ProfileHistoryPanelProps) {
+  const { hasReviewForBooking, refresh } = useStoredReviews();
+  const [reviewBooking, setReviewBooking] = useState<MockBooking | null>(null);
+  const [qrPreorder, setQrPreorder] = useState<MockPreorderHistory | null>(null);
+
   const items =
     tab === "bookings"
       ? bookings
@@ -35,29 +42,55 @@ export function ProfileHistoryPanel({
   }
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={tab}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -6 }}
-        transition={{ duration: 0.22 }}
-        className="space-y-3"
-      >
-        {tab === "bookings" &&
-          bookings.map((item, i) => (
-            <BookingCard key={item.id} booking={item} index={i} />
-          ))}
-        {tab === "preorders" &&
-          preorders.map((item, i) => (
-            <PreorderCard key={item.id} preorder={item} index={i} />
-          ))}
-        {tab === "discounts" &&
-          discounts.map((item, i) => (
-            <DiscountCard key={item.id} discount={item} index={i} />
-          ))}
-      </motion.div>
-    </AnimatePresence>
+    <>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={tab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.22 }}
+          className="space-y-3"
+        >
+          {tab === "bookings" &&
+            bookings.map((item, i) => (
+              <BookingCard
+                key={item.id}
+                booking={item}
+                index={i}
+                hasReview={hasReviewForBooking(item.id)}
+                onLeaveReview={() => setReviewBooking(item)}
+              />
+            ))}
+          {tab === "preorders" &&
+            preorders.map((item, i) => (
+              <PreorderCard
+                key={item.id}
+                preorder={item}
+                index={i}
+                onShowQr={() => setQrPreorder(item)}
+              />
+            ))}
+          {tab === "discounts" &&
+            discounts.map((item, i) => (
+              <DiscountCard key={item.id} discount={item} index={i} />
+            ))}
+        </motion.div>
+      </AnimatePresence>
+
+      <ReviewSubmitSheet
+        open={reviewBooking !== null}
+        booking={reviewBooking}
+        onClose={() => setReviewBooking(null)}
+        onSubmitted={refresh}
+      />
+
+      <PreorderQrModal
+        open={qrPreorder !== null}
+        preorder={qrPreorder}
+        onClose={() => setQrPreorder(null)}
+      />
+    </>
   );
 }
 
@@ -76,7 +109,19 @@ function ProfileEmptyState() {
   );
 }
 
-function BookingCard({ booking, index }: { booking: MockBooking; index: number }) {
+function BookingCard({
+  booking,
+  index,
+  hasReview,
+  onLeaveReview,
+}: {
+  booking: MockBooking;
+  index: number;
+  hasReview: boolean;
+  onLeaveReview: () => void;
+}) {
+  const isCompleted = booking.status === "completed";
+
   return (
     <HistoryCard index={index}>
       <div className="flex items-start justify-between gap-3">
@@ -90,6 +135,25 @@ function BookingCard({ booking, index }: { booking: MockBooking; index: number }
       </div>
       <p className="mt-2 text-sm text-charcoal">{booking.dateTimeLabel}</p>
       <p className="mt-1 text-sm text-muted">{booking.guestsTableLabel}</p>
+
+      {isCompleted && (
+        <div className="mt-4">
+          {hasReview ? (
+            <span className="inline-flex items-center gap-1.5 rounded-2xl bg-sage/15 px-4 py-2.5 text-sm font-medium text-sage">
+              ✓ Отзыв оставлен
+            </span>
+          ) : (
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.98 }}
+              onClick={onLeaveReview}
+              className="w-full rounded-2xl bg-charcoal py-3 text-sm font-medium text-white"
+            >
+              Оставить отзыв
+            </motion.button>
+          )}
+        </div>
+      )}
     </HistoryCard>
   );
 }
@@ -97,10 +161,14 @@ function BookingCard({ booking, index }: { booking: MockBooking; index: number }
 function PreorderCard({
   preorder,
   index,
+  onShowQr,
 }: {
   preorder: MockPreorderHistory;
   index: number;
+  onShowQr: () => void;
 }) {
+  const isAwaitingVisit = preorder.status === "awaiting_visit";
+
   return (
     <HistoryCard index={index}>
       <div className="flex items-start justify-between gap-3">
@@ -109,9 +177,7 @@ function PreorderCard({
         </h3>
         <StatusPill
           label={preorder.statusLabel}
-          variant={
-            preorder.status === "awaiting_visit" ? "accent" : "muted"
-          }
+          variant={isAwaitingVisit ? "accent" : "muted"}
         />
       </div>
       <p className="mt-2 text-sm text-charcoal">{preorder.dishesLabel}</p>
@@ -119,6 +185,17 @@ function PreorderCard({
         <p className="text-sm text-muted">{preorder.visitTimeLabel}</p>
         <PriceLabel amount={preorder.total} className="text-sm font-semibold" />
       </div>
+
+      {isAwaitingVisit && (
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.98 }}
+          onClick={onShowQr}
+          className="mt-4 w-full rounded-2xl bg-charcoal py-3 text-sm font-medium text-white"
+        >
+          Показать на кассе
+        </motion.button>
+      )}
     </HistoryCard>
   );
 }

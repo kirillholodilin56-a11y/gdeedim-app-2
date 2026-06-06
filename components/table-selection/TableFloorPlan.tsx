@@ -22,7 +22,8 @@ export function TableFloorPlan({
   return (
     <>
       <div className="mt-4 flex justify-center gap-4">
-        <LegendDot label="свободно" className="bg-white ring-1 ring-charcoal/10" />
+        <LegendDot label="свободно" className="border border-charcoal/10 bg-white" />
+        <LegendDot label="занято" className="bg-muted" />
         <LegendDot label="выбрано" className="bg-charcoal" />
       </div>
       <motion.div
@@ -54,7 +55,9 @@ export function TableFloorPlan({
 function LegendDot({ label, className }: { label: string; className: string }) {
   return (
     <span className="flex items-center gap-1.5 text-[10px] text-muted">
-      <span className={`h-3 w-3 rounded-full ${className}`} />
+      <span
+        className={`inline-block h-3 w-3 shrink-0 rounded-full ${className}`}
+      />
       {label}
     </span>
   );

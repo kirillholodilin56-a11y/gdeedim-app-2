@@ -48,9 +48,16 @@ export function ReviewsSheet({ open, onClose, summary }: ReviewsSheetProps) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-semibold">{review.authorName}</p>
-                    <span className="flex items-center gap-0.5 text-xs font-semibold text-charcoal">
-                      ★ {review.rating}
-                    </span>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {review.dateLabel && (
+                        <span className="text-xs text-muted">
+                          {review.dateLabel}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-0.5 text-xs font-semibold text-charcoal">
+                        ★ {review.rating}
+                      </span>
+                    </div>
                   </div>
                   <p className="mt-2 text-sm leading-relaxed text-charcoal">
                     {review.text}

@@ -10,6 +10,7 @@ export type BookingStatus = "active" | "completed";
 
 export interface MockBooking {
   id: string;
+  restaurantId: string;
   restaurantName: string;
   dateTimeLabel: string;
   guestsTableLabel: string;
@@ -21,6 +22,7 @@ export type PreorderHistoryStatus = "awaiting_visit" | "completed" | "cancelled"
 
 export interface MockPreorderHistory {
   id: string;
+  restaurantId: string;
   restaurantName: string;
   dishesLabel: string;
   visitTimeLabel: string;
@@ -42,6 +44,7 @@ export interface MockDiscountHistory {
 export const mockBookings: MockBooking[] = [
   {
     id: "bk-1",
+    restaurantId: "snegiri",
     restaurantName: "Снегири",
     dateTimeLabel: "Сегодня · 19:00",
     guestsTableLabel: "3 гостя · столик №4 у окна",
@@ -50,6 +53,7 @@ export const mockBookings: MockBooking[] = [
   },
   {
     id: "bk-2",
+    restaurantId: "kintsugi",
     restaurantName: "Кинцуги",
     dateTimeLabel: "Завтра · 18:30",
     guestsTableLabel: "2 гостя · столик №3 у окна",
@@ -58,6 +62,7 @@ export const mockBookings: MockBooking[] = [
   },
   {
     id: "bk-3",
+    restaurantId: "dodo-pizza",
     restaurantName: "Додо Пицца",
     dateTimeLabel: "12 мая · 13:00",
     guestsTableLabel: "4 гостя · столик №6",
@@ -69,6 +74,7 @@ export const mockBookings: MockBooking[] = [
 export const mockPreorderHistory: MockPreorderHistory[] = [
   {
     id: "po-1",
+    restaurantId: "surf-coffee-lamp",
     restaurantName: "Surf Coffee x Lamp",
     dishesLabel: "Айс латте · вупи-пай",
     visitTimeLabel: "Сегодня · 19:00",
@@ -78,6 +84,7 @@ export const mockPreorderHistory: MockPreorderHistory[] = [
   },
   {
     id: "po-2",
+    restaurantId: "territoriya-kofe",
     restaurantName: "Территория Кофе",
     dishesLabel: "Капучино · сырники",
     visitTimeLabel: "Вчера · 10:30",
@@ -87,6 +94,7 @@ export const mockPreorderHistory: MockPreorderHistory[] = [
   },
   {
     id: "po-3",
+    restaurantId: "pho-tigers",
     restaurantName: "Pho Tigers",
     dishesLabel: "Фо бо · свежие роллы",
     visitTimeLabel: "10 мая · 20:00",

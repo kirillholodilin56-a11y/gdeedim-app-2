@@ -13,6 +13,7 @@ import { PreorderFlow } from "@/components/preorder/PreorderFlow";
 import { ReviewsSheet } from "@/components/reviews/ReviewsSheet";
 import { usePreorder } from "@/context/PreorderContext";
 import { getReviewsForRestaurant } from "@/lib/restaurant-reviews";
+import { useStoredReviews } from "@/hooks/useStoredReviews";
 import {
   ALL_MENU_CATEGORY,
   filterMenuByCategory,
@@ -28,6 +29,7 @@ export default function RestaurantDetailPage() {
   const [activeCategory, setActiveCategory] = useState(ALL_MENU_CATEGORY);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [reviewsOpen, setReviewsOpen] = useState(false);
+  const { reviews: storedReviews } = useStoredReviews();
 
   const venueMenu = useMemo(
     () =>
@@ -45,11 +47,23 @@ export default function RestaurantDetailPage() {
     [venueMenu, activeCategory]
   );
 
+  const reviewSummary = useMemo(
+    () =>
+      restaurant
+        ? getReviewsForRestaurant(
+            restaurant.id,
+            restaurant.rating,
+            storedReviews
+          )
+        : null,
+    [restaurant, storedReviews]
+  );
+
   useEffect(() => {
     setActiveCategory(ALL_MENU_CATEGORY);
   }, [restaurant?.id]);
 
-  if (!restaurant) {
+  if (!restaurant || !reviewSummary) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-5">
         <p className="text-muted">Заведение не найдено</p>
@@ -65,10 +79,6 @@ export default function RestaurantDetailPage() {
 
   const stopListCount = venueMenu.filter((m) => !m.isAvailable).length;
   const cartVisible = hasCartForRestaurant(restaurant.id);
-  const reviewSummary = getReviewsForRestaurant(
-    restaurant.id,
-    restaurant.rating
-  );
 
   return (
     <div className={`min-h-screen ${cartVisible ? "pb-36" : "pb-8"}`}>

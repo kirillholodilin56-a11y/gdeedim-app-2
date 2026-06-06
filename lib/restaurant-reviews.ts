@@ -1,3 +1,8 @@
+import {
+  formatReviewDate,
+  type StoredReview,
+} from "./review-storage";
+
 export interface RestaurantReview {
   id: string;
   authorName: string;
@@ -5,6 +10,8 @@ export interface RestaurantReview {
   rating: number;
   text: string;
   tag?: string;
+  createdAt?: string;
+  dateLabel?: string;
 }
 
 export interface RestaurantReviewSummary {
@@ -58,27 +65,54 @@ const BASE_REVIEWS: Omit<RestaurantReview, "id">[] = [
   },
 ];
 
-/** Demo reviews — same concise set for all venues, count varies slightly. */
+function storedToRestaurantReview(stored: StoredReview): RestaurantReview {
+  return {
+    id: `stored-${stored.bookingId}`,
+    authorName: stored.authorName,
+    authorInitial: stored.authorName.charAt(0).toUpperCase(),
+    rating: stored.rating,
+    text: stored.reviewText,
+    createdAt: stored.createdAt,
+    dateLabel: formatReviewDate(stored.createdAt),
+  };
+}
+
+/** Demo reviews merged with user reviews from localStorage. */
 export function getReviewsForRestaurant(
   restaurantId: string,
-  venueRating: number
+  venueRating: number,
+  storedReviews: StoredReview[] = []
 ): RestaurantReviewSummary {
   const offset = restaurantId.length % 2;
-  const reviews = BASE_REVIEWS.slice(0, 6 - offset).map((r, i) => ({
-    ...r,
+  const mockReviews = BASE_REVIEWS.slice(0, 6 - offset).map((review, i) => ({
+    ...review,
     id: `${restaurantId}-rev-${i}`,
   }));
 
+  const localReviews = storedReviews
+    .filter((review) => review.restaurantId === restaurantId)
+    .map(storedToRestaurantReview)
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt ?? 0).getTime() -
+        new Date(a.createdAt ?? 0).getTime()
+    );
+
+  const reviews = [...localReviews, ...mockReviews];
+  const mockTotal = 24 + (restaurantId.charCodeAt(0) % 40);
+
   const averageRating =
-    Math.round(
-      ((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length + venueRating) /
-        2) *
-        10
-    ) / 10;
+    reviews.length > 0
+      ? Math.round(
+          (reviews.reduce((sum, review) => sum + review.rating, 0) /
+            reviews.length) *
+            10
+        ) / 10
+      : venueRating;
 
   return {
     averageRating,
-    totalCount: 24 + (restaurantId.charCodeAt(0) % 40),
+    totalCount: mockTotal + localReviews.length,
     reviews,
   };
 }
